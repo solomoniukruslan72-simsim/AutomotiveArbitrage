@@ -1,0 +1,22 @@
+name: Database Migration Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and setup Python
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Run Database Migrations
+        run: uv run --locked alembic upgrade head
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
