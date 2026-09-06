@@ -3,9 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Uuid
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+
+_JSONB = JSONB().with_variant(JSON(), "sqlite")
 
 from app.db import Base
 
@@ -47,8 +49,12 @@ class Vehicle(Base):
 
 class VehicleLink(Base):
     __tablename__ = "vehicle_link"
-    listing_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("listing.listing_id"), primary_key=True)
-    vehicle_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vehicle.vehicle_id"), primary_key=True)
+    listing_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("listing.listing_id"), primary_key=True
+    )
+    vehicle_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("vehicle.vehicle_id"), primary_key=True
+    )
     match_method: Mapped[str] = mapped_column(String(30), nullable=False)
     match_confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     matched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -63,6 +69,7 @@ class VehicleSnapshot(Base):
     currency: Mapped[str | None] = mapped_column(String(3))
     mileage_km: Mapped[int | None] = mapped_column(Integer)
     equipment_hash: Mapped[str | None] = mapped_column(String(64))
-    condition_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
-    inputs_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
-    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    snapshot_content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    condition_data: Mapped[dict[str, Any] | None] = mapped_column(_JSONB)
+    inputs_snapshot: Mapped[dict[str, Any] | None] = mapped_column(_JSONB)
+    raw_data: Mapped[dict[str, Any] | None] = mapped_column(_JSONB)
